@@ -20,6 +20,7 @@
 	import Copy from '$lib/Copy.svelte';
 	import xmlFormat from 'xml-formatter';
 	import prettify from 'html-prettify';
+	import { onMount } from 'svelte';
 
 	export let data;
 
@@ -62,8 +63,9 @@
 	let outputTextAreaColIndex = 0;
 	let inputTextArea: HTMLTextAreaElement;
 	let outputTextArea: HTMLTextAreaElement;
-	// let spaceoption = 4;
-	// let Tabs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+	let spaceoption = 4;
+	let Tabs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+	let text = '';
 
 	function formatXML() {
 		let inputXML = inputTextAreaContent;
@@ -174,6 +176,17 @@
 			}
 		}`;
 		inputTextAreaContent = samplejson;
+	}
+
+	function updateIndentation() {
+		const indentation = ' '.repeat(spaceoption);
+		const lines = text.split('\n');
+		const indentedLines = lines.map((line) => indentation + line);
+		text = indentedLines.join('\n');
+	}
+
+	$: {
+		updateIndentation();
 	}
 
 	function findLineColumnIndex(event: any) {
@@ -309,6 +322,29 @@
 	function convertXML2JSON() {}
 	function convertJSON2CSV() {}
 	function convertJSON2XML() {}
+
+	// Full screen
+	function handleMaximizeInput() {
+		const textEditor = document.getElementById('inputTextEditor');
+		if (textEditor) {
+			if (!document.fullscreenElement) {
+				textEditor.requestFullscreen();
+			} else {
+				document.exitFullscreen();
+			}
+		}
+	}
+
+	function handleMaximizeOutput() {
+		const textEditor = document.getElementById('outputTextEditor');
+		if (textEditor) {
+			if (!document.fullscreenElement) {
+				textEditor.requestFullscreen();
+			} else {
+				document.exitFullscreen();
+			}
+		}
+	}
 
 	// delete functionality
 	const clearContent = () => {
@@ -676,7 +712,7 @@
 						{/if}
 					</Tooltip>
 
-					<!-- <label for="dropdown" class="text-white">Space:</label>
+					<label for="dropdown" class="text-white">Space:</label>
 					<select
 						id="dropdown"
 						class="text-white rounded cursor-pointer dark:bg-gray-700 dark:border-gray-600"
@@ -685,32 +721,35 @@
 						{#each Tabs as option (option)}
 							<option value={option}>{option} Tabs</option>
 						{/each}
-					</select> -->
+					</select>
 				</div>
 			</div>
 			<button
 				type="button"
 				class="p-2 text-gray-700 rounded cursor-pointer sm:ml-auto hover:text-blue-800 hover:bg-gray-300 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600"
+				on:click={handleMaximizeInput}
 			>
 				<ExpandSolid size="sm" />
-				<span class="sr-only">Full screen</span>
+				<span class="sr-only">Full screen input</span>
 			</button>
 			<Tooltip color="blue" arrow={false}>Full Screen</Tooltip>
 		</div>
 		<div class="px-4 py-2 bg-white dark:bg-gray-800">
 			<Label for="editor" class="sr-only">Code Editor</Label>
-			<textarea
-				bind:this={inputTextArea}
-				bind:value={inputTextAreaContent}
-				on:keyup={findLineColumnIndex}
-				on:keyup={findSize}
-				on:keydown={(e) => allowTabIndentation(e)}
-				on:mouseup={findLineColumnIndex}
-				data-text-area-type="input"
-				rows="8"
-				class="block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400"
-				placeholder="{inputTextAreaPlaceholder} Code"
-			/>
+			<div id="inputTextEditor" class="textarea">
+				<textarea
+					bind:this={inputTextArea}
+					bind:value={inputTextAreaContent}
+					on:keyup={findLineColumnIndex}
+					on:keyup={findSize}
+					on:keydown={(e) => allowTabIndentation(e)}
+					on:mouseup={findLineColumnIndex}
+					data-text-area-type="input"
+					rows="8"
+					class="block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400"
+					placeholder="{inputTextAreaPlaceholder} Code"
+				/>
+			</div>
 		</div>
 		<div
 			class="px-4 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-b-lg text-gray-700 dark:text-gray-200 flex justify-start divide-x divide-gray-700 dark:divide-gray-400"
@@ -852,27 +891,31 @@
 			<button
 				type="button"
 				class="p-2 text-gray-700 rounded cursor-pointer sm:ml-auto hover:text-blue-800 hover:bg-gray-300 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-600"
+				on:click={handleMaximizeOutput}
 			>
 				<ExpandSolid size="sm" />
-				<span class="sr-only">Full screen</span>
+				<span class="sr-only">Full screen output</span>
 			</button>
 			<Tooltip color="blue" arrow={false}>Full Screen</Tooltip>
 		</div>
 		<div class="px-4 py-2 bg-white dark:bg-gray-800">
 			<Label for="editor" class="sr-only">Code Output</Label>
-			<textarea
-				bind:this={outputTextArea}
-				bind:value={outputTextAreaContent}
-				on:keyup={findLineColumnIndex}
-				on:keyup={findSize}
-				on:keydown={(e) => allowTabIndentation(e)}
-				on:mouseup={findLineColumnIndex}
-				data-text-area-type="output"
-				rows="8"
-				class="block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400"
-				placeholder="{outputTextAreaPlaceholder} Output"
-			/>
+			<div id="outputTextEditor" class="textarea">
+				<textarea
+					bind:this={outputTextArea}
+					bind:value={outputTextAreaContent}
+					on:keyup={findLineColumnIndex}
+					on:keyup={findSize}
+					on:keydown={(e) => allowTabIndentation(e)}
+					on:mouseup={findLineColumnIndex}
+					data-text-area-type="output"
+					rows="8"
+					class="block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400"
+					placeholder="{outputTextAreaPlaceholder} Output"
+				/>
+			</div>
 		</div>
+
 		<div
 			class="px-4 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-b-lg text-gray-700 dark:text-gray-200 flex justify-start divide-x divide-gray-700 dark:divide-gray-400"
 		>
